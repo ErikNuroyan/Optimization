@@ -6,19 +6,19 @@
 
 using namespace std;
 
-void crossRow(bool* crossed, int rowIndex, int nDims) {
+void crossRow(std::vector<bool>& crossed, int rowIndex, int nDims) {
     for (int i = 0; i < nDims; ++i) {
         crossed[rowIndex * nDims + i] = false;
     }
 }
 
-void crossColumn(bool* crossed, int columnIndex, int nDims) {
+void crossColumn(std::vector<bool>& crossed, int columnIndex, int nDims) {
     for (int i = 0; i < nDims; ++i) {
         crossed[i * nDims + columnIndex] = false;
     }
 }
 
-vector<pair<int, int>> markZeros(bool* crossed, int nDims, bool* markedRows) {
+vector<pair<int, int>> markZeros(std::vector<bool>& crossed, std::vector<bool>& markedRows, int nDims) {
     bool done = false;
     vector<pair<int, int>> markedZeros;
     while (!done) {
@@ -60,12 +60,11 @@ vector<pair<int, int>> markZeros(bool* crossed, int nDims, bool* markedRows) {
     return markedZeros;
 }
 
-
-std::vector<int> hungarianAlgorithm(int* matrix, int nDims) {
+std::vector<int> hungarianAlgorithm(std::vector<int>& matrix, int nDims) {
     //Per row minimum subtraction
     for (int i = 0; i < nDims; ++i) {
-        int minIndex = std::distance(matrix + i * nDims,
-                                     std::min_element(matrix + i * nDims, matrix + (i + 1) * nDims));
+        int minIndex = std::distance(matrix.begin() + i * nDims,
+                                     std::min_element(matrix.begin() + i * nDims, matrix.begin() + (i + 1) * nDims));
         int minValue = matrix[i * nDims + minIndex];
         for (int j = 0; j < nDims; ++j) {
             matrix[i * nDims + j] -= minValue;
@@ -85,21 +84,19 @@ std::vector<int> hungarianAlgorithm(int* matrix, int nDims) {
     }
     
     while (true) {
-        int* intersectionCount = static_cast<int*>(std::calloc(1, nDims * nDims * sizeof(int)));
-        bool* crossed = static_cast<bool*>(std::calloc(1, nDims * nDims));
-        
+        std::vector<bool> crossed(nDims * nDims, false);
         for (int i = 0; i < nDims; ++i) {
             for (int j = 0; j < nDims; ++j) {
-                if (matrix[i * nDims + j] == 0 ) {
+                if (matrix[i * nDims + j] == 0) {
                     crossed[i * nDims + j] = true;
                 }
             }
         }
         
-        bool* markedRows = static_cast<bool*>(std::calloc(1, nDims));
-        std::vector<std::pair<int, int>> markedZeros = markZeros(crossed, nDims, markedRows);
+        std::vector<bool> markedRows(nDims, false);
+        std::vector<std::pair<int, int>> markedZeros = markZeros(crossed, markedRows, nDims);
         bool checkSwitch = true;
-        bool* markedColumns = static_cast<bool*>(std::calloc(1, nDims));
+        std::vector<bool> markedColumns(nDims, false);
         while (checkSwitch) {
             for (int i = 0; i < nDims; ++i) {
                 checkSwitch = false;
@@ -123,23 +120,12 @@ std::vector<int> hungarianAlgorithm(int* matrix, int nDims) {
             }
         }
         
-        int sum = 0;
-        for (int i = 0; i < nDims; ++i) {
-            if (markedRows[i]) {
-                ++sum;
-            }
-            if (markedColumns[i]) {
-                ++sum;
-            }
-        }
+        auto predicate = [](int i) {return i != 0;};
+        int sum = std::count_if(markedRows.begin(), markedRows.end(), predicate);
+        sum += std::count_if(markedColumns.begin(), markedColumns.end(), predicate);
         
         if (sum == nDims) {
-            //The optimal solution is found
-            free(intersectionCount);
-            free(crossed);
-            free(markedRows);
-            free(markedColumns);
-            
+            //Optimal solution is found
             std::cout << "Optimal solution is found\n";
             std::vector<int> optimalSolution(nDims);
             for (auto p : markedZeros) {
@@ -168,13 +154,7 @@ std::vector<int> hungarianAlgorithm(int* matrix, int nDims) {
                 }
             }
         }
-        
-        free(intersectionCount);
-        free(crossed);
-        free(markedRows);
-        free(markedColumns);
     }
-    
 }
 
 int main()
@@ -182,13 +162,13 @@ int main()
     int nDims = 5;
     
     // int matrix[] = {
-    //     9, 11, 14, 11, 7,
+    //     9, 11, 14, 11, 7 ,
     //     6, 15, 13, 13, 10,
-    //     12, 13, 6, 8, 8,
-    //     11, 9, 10, 12, 9,
+    //     12, 13, 6, 8,  8 ,
+    //     11, 9, 10, 12, 9 ,
     //     7, 12, 14, 10, 14
     // };
-    int matrix[] = {
+    vector<int> matrix = {
         85,	75,	65,	125, 75,
         90,	78,	66,	132, 78,
         75,	66,	57,	114, 69,
@@ -198,7 +178,6 @@ int main()
     
     std::vector<int> optimalSolution = hungarianAlgorithm(matrix, nDims);
     for (auto i: optimalSolution) {
-        std::cout << i << std::endl;
+        std::cout << i << " ";
     }
-        
 }
