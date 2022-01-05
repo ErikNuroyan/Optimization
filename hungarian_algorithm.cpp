@@ -3,6 +3,7 @@
 #include <list>
 #include <algorithm>
 #include <climits>
+#include <cfloat>
 
 using namespace std;
 
@@ -60,12 +61,12 @@ vector<pair<int, int>> markZeros(std::vector<bool>& crossed, std::vector<bool>& 
     return markedZeros;
 }
 
-std::vector<int> hungarianAlgorithm(std::vector<int>& matrix, int nDims) {
+std::vector<int> hungarianAlgorithm(std::vector<float>& matrix, int nDims) {
     //Per row minimum subtraction
     for (int i = 0; i < nDims; ++i) {
         int minIndex = std::distance(matrix.begin() + i * nDims,
                                      std::min_element(matrix.begin() + i * nDims, matrix.begin() + (i + 1) * nDims));
-        int minValue = matrix[i * nDims + minIndex];
+        float minValue = matrix[i * nDims + minIndex];
         for (int j = 0; j < nDims; ++j) {
             matrix[i * nDims + j] -= minValue;
         }
@@ -73,7 +74,7 @@ std::vector<int> hungarianAlgorithm(std::vector<int>& matrix, int nDims) {
     
     //Per column minimum subtraction
     for (int j = 0; j < nDims; ++j) {
-        int minValue = INT_MAX;
+        float minValue = FLT_MAX;
         for (int i = 0; i < nDims; ++i) {
             minValue = std::min(minValue, matrix[i * nDims + j]);
         }
@@ -87,7 +88,7 @@ std::vector<int> hungarianAlgorithm(std::vector<int>& matrix, int nDims) {
         std::vector<bool> crossed(nDims * nDims, false);
         for (int i = 0; i < nDims; ++i) {
             for (int j = 0; j < nDims; ++j) {
-                if (matrix[i * nDims + j] == 0) {
+                if (matrix[i * nDims + j] < 0.0001) {
                     crossed[i * nDims + j] = true;
                 }
             }
@@ -105,7 +106,7 @@ std::vector<int> hungarianAlgorithm(std::vector<int>& matrix, int nDims) {
                 }
                 
                 for (int j = 0; j < nDims; ++j) {
-                    if (matrix[i * nDims + j] == 0 && !markedColumns[j]) {
+                    if (matrix[i * nDims + j] < 0.0001 && !markedColumns[j]) {
                         markedColumns[j] = true;
                         checkSwitch = true;
                     }
@@ -135,7 +136,7 @@ std::vector<int> hungarianAlgorithm(std::vector<int>& matrix, int nDims) {
             return optimalSolution;
         }
 
-        int minValue = INT_MAX;
+        float minValue = FLT_MAX;
         for (int i = 0; i < nDims; ++i) {
             for (int j = 0; j < nDims; ++j) {
                 if (!markedRows[i] && !markedColumns[j]) {
@@ -160,20 +161,12 @@ std::vector<int> hungarianAlgorithm(std::vector<int>& matrix, int nDims) {
 int main()
 {
     int nDims = 5;
-    
-    // int matrix[] = {
-    //     9, 11, 14, 11, 7 ,
-    //     6, 15, 13, 13, 10,
-    //     12, 13, 6, 8,  8 ,
-    //     11, 9, 10, 12, 9 ,
-    //     7, 12, 14, 10, 14
-    // };
-    vector<int> matrix = {
-        85,	75,	65,	125, 75,
-        90,	78,	66,	132, 78,
-        75,	66,	57,	114, 69,
-        80,	72,	60,	120, 72,
-        76, 64,	56,	112, 68
+    vector<float> matrix = {
+        85.f, 75.f, 65.f, 125.f, 75.f,
+        90.f, 78.f,	66.f, 132.f, 78.f,
+        75.f, 66.f,	57.f, 114.f, 69.f,
+        80.f, 72.f,	60.f, 120.f, 72.f,
+        76.f, 64.f,	56.f, 112.f, 68.f
     };
     
     std::vector<int> optimalSolution = hungarianAlgorithm(matrix, nDims);
